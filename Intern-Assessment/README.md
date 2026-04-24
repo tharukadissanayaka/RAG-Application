@@ -1,262 +1,87 @@
 # RAG Q&A Application
 
-A lightweight, production-ready Retrieval-Augmented Generation (RAG) system built with FastAPI, Streamlit, and Groq LLM. Perfect for internship assessments and free-tier cloud deployments.
+A Retrieval-Augmented Generation (RAG) application built with FastAPI, Streamlit, and Groq LLM.
 
-## 🚀 Features
+## Prerequisites
 
-- **Document Ingestion**: Upload and process `.txt` and `.pdf` files
-- **Vector Search**: Semantic similarity search using ChromaDB and sentence transformers
-- **LLM Integration**: Uses Groq API for fast, free-tier LLM access
-- **RESTful API**: FastAPI with automatic Swagger documentation
-- **Web Frontend**: Interactive Streamlit interface for easy access
-- **Docker Support**: Multi-stage Dockerfile optimized for low-resource environments (1GB RAM)
-- **CI/CD Pipeline**: GitHub Actions for automated builds and tests
-- **System Prompt Control**: Explicit instructions to prevent hallucinations
-
-## 📋 Prerequisites
-
-- Python 3.11+
-- Docker & Docker Compose (optional)
+- Docker & Docker Compose
 - Groq API Key (free at [console.groq.com](https://console.groq.com))
 
-## 🔑 Getting API Keys
+## Running Locally with Docker
 
-### Groq API (Free)
-
-1. Visit [console.groq.com](https://console.groq.com)
-2. Sign up with your email
-3. Navigate to API Keys
-4. Create a new API key
-5. Copy and save it to `.env`
-
-## ⚙️ Installation
-
-### Local Setup
-
-1. **Clone the repository**
-
-   ```bash
-   git clone <repository-url>
-   cd Intern-Assessment
-   ```
-
-2. **Create environment file**
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Edit `.env` and add your Groq API key:
-
-   ```env
-   GROQ_API_KEY=your_groq_api_key_here
-   ```
-
-3. **Install backend dependencies**
-
-   ```bash
-   pip install -r backend/requirements.txt
-   ```
-
-4. **Install frontend dependencies (optional)**
-   ```bash
-   pip install -r frontend/requirements.txt
-   ```
-
-### Docker Setup
-
-1. **Build and run with Docker Compose**
-
-   ```bash
-   docker-compose up --build
-   ```
-
-2. **Access the services**
-   - API: http://localhost:8000
-   - Frontend: http://localhost:8501
-   - API Docs: http://localhost:8000/docs
-
-## 🚀 Running the Application
-
-### Option 1: FastAPI Backend Only
+### 1. Clone the repository
 
 ```bash
-cd backend
-python -m uvicorn main:app --reload --port 8000
+git clone https://github.com/YOUR_USERNAME/RAG-Application.git
+cd RAG-Application/Intern-Assessment
 ```
 
-The API will be available at `http://localhost:8000` with interactive docs at `/docs`.
-
-### Option 2: With Streamlit Frontend
-
-**Terminal 1 (Backend):**
+### 2. Create environment file
 
 ```bash
-cd backend
-python -m uvicorn main:app --port 8000
+cp .env.example .env
 ```
 
-**Terminal 2 (Frontend):**
+Edit `.env` and add your Groq API key:
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+MODEL_NAME=llama-3.1-8b-instant
+VECTOR_STORE_PATH=./chroma_db
+PORT=8000
+MAX_UPLOAD_SIZE=10485760
+```
+
+### 3. Build and run with Docker Compose
 
 ```bash
-cd frontend
-streamlit run app.py
+docker-compose up --build
 ```
 
-The frontend will be available at `http://localhost:8501`.
+### 4. Access the services
 
-### Option 3: Docker Compose
+- **API**: http://localhost:8000
+- **API Docs (Swagger)**: http://localhost:8000/docs
+- **Frontend (Streamlit)**: http://localhost:8501
+
+### 5. Test the application
+
+1. Open http://localhost:8000/docs
+2. Use `/ingest` endpoint to upload a PDF or TXT file
+3. Use `/ask` endpoint to ask questions about the document
+4. View the answer with context chunks
+
+### 6. Stop the application
 
 ```bash
-docker-compose up
+docker-compose down
 ```
 
-## 📚 API Endpoints
+## API Endpoints
 
-### Health Check
+- `POST /ingest` - Upload and process a document
+- `POST /ask` - Ask a question based on ingested documents
+- `GET /health` - Health check
+- `GET /stats` - Vector store statistics
+- `DELETE /clear` - Clear all documents
 
-```bash
-GET /health
-```
+## Architecture
 
-### Ingest Document
+- **Backend**: FastAPI + Python with LangChain RAG pipeline
+- **LLM**: Groq API (llama-3.1-8b-instant)
+- **Vector Store**: ChromaDB
+- **Frontend**: Streamlit web interface
+- **Containerization**: Docker multi-stage build
 
-```bash
-POST /ingest
-Content-Type: multipart/form-data
+## Environment Variables
 
-# Example:
-curl -X POST "http://localhost:8000/ingest" \
-  -F "file=@document.pdf"
-```
-
-**Response:**
-
-```json
-{
-  "success": true,
-  "file_name": "document.pdf",
-  "chunks_created": 42,
-  "message": "Successfully ingested document.pdf (42 chunks)"
-}
-```
-
-### Ask Question
-
-```bash
-POST /ask?question=What+is+the+document+about?
-```
-
-**Response:**
-
-```json
-{
-  "answer": "The document discusses...",
-  "context": [
-    {
-      "content": "Relevant excerpt...",
-      "source": "document.pdf",
-      "similarity_score": 0.95
-    }
-  ],
-  "question": "What is the document about?",
-  "success": true
-}
-```
-
-### Get Statistics
-
-```bash
-GET /stats
-```
-
-**Response:**
-
-```json
-{
-  "vector_store": {
-    "success": true,
-    "total_documents": 42,
-    "vector_store_path": "./chroma_db"
-  },
-  "documents_count": 42
-}
-```
-
-### Clear Vector Store
-
-```bash
-DELETE /clear
-```
-
-## 🎯 System Prompt
-
-The RAG system uses a strict system prompt to prevent hallucinations:
-
-> "You are a helpful assistant that answers questions based exclusively on the provided context. Only use information from the provided context to answer questions. If the answer is not in the context, respond with exactly: 'I don't know.' Do not use any external knowledge or make assumptions."
-
-## 📦 Architecture
-
-### Backend Structure
-
-```
-backend/
-├── main.py           # FastAPI application
-├── config.py         # Configuration and environment variables
-├── ingestion.py      # Document ingestion and vector store
-├── retrieval.py      # RAG retrieval and LLM querying
-└── requirements.txt  # Python dependencies
-```
-
-### Frontend Structure
-
-```
-frontend/
-├── app.py            # Streamlit application
-├── Dockerfile        # Frontend container
-└── requirements.txt  # Python dependencies
-```
-
-### Key Components
-
-**1. Document Ingestion (`ingestion.py`)**
-
-- Loads PDF and TXT files
-- Splits documents into chunks (1000 chars, 200 overlap)
-- Stores embeddings in ChromaDB
-- Uses lightweight sentence-transformers model
-
-**2. RAG Retrieval (`retrieval.py`)**
-
-- Retrieves top-3 similar chunks for each query
-- Uses Groq API for LLM inference
-- Enforces system prompt for accurate, context-only responses
-
-**3. FastAPI Application (`main.py`)**
-
-- RESTful endpoints for document management
-- File upload with validation
-- Error handling and CORS support
-
-**4. Streamlit Frontend (`app.py`)**
-
-- Interactive chat interface
-- Document upload and management
-- Context visualization
-- Chat history tracking
-
-## 🐳 Docker Optimization
-
-The multi-stage Dockerfile optimizes for low-resource environments:
-
-- **Stage 1 (Builder)**: Installs dependencies in a virtual environment
-- **Stage 2 (Runtime)**: Uses only the venv, reducing final image size to ~2GB
-- **Health Checks**: Automatic service monitoring
-- **Volume Mounts**: Persistent vector store storage
-
-## 🚀 Deployment
-
-### Render.com (Free Tier)
+| Variable          | Default              | Description                   |
+| ----------------- | -------------------- | ----------------------------- |
+| GROQ_API_KEY      | -                    | Your Groq API key (required)  |
+| MODEL_NAME        | llama-3.1-8b-instant | Groq model to use             |
+| VECTOR_STORE_PATH | ./chroma_db          | ChromaDB storage path         |
+| PORT              | 8000                 | API port                      |
+| MAX_UPLOAD_SIZE   | 10485760             | Max file size in bytes (10MB) |
 
 1. Connect your GitHub repository
 2. Create a new Web Service
