@@ -183,12 +183,4 @@ docker system prune -a
 docker-compose build --no-cache
 ```
 
-## 📞 Support
 
-For issues and questions, create a GitHub issue or contact the development team.
-
----
-
-**Built for**: Internship Assessment  
-**Stack**: FastAPI • Streamlit • Groq • ChromaDB • Docker • GitHub Actions  
-**Status**: Production-Ready ✅
