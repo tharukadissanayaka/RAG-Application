@@ -1,0 +1,51 @@
+services:
+  # Backend API Service
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rag-api
+    ports:
+      - "8000:8000"
+    environment:
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - MODEL_NAME=${MODEL_NAME:-llama-3.1-8b-instant}
+      - VECTOR_STORE_PATH=/app/chroma_db
+      - PORT=8000
+      - MAX_UPLOAD_SIZE=10485760
+    volumes:
+      - rag_data:/app/chroma_db
+      - ./backend:/app/backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - rag_network
+
+  # Frontend Service
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: rag-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - rag_network
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+
+volumes:
+  rag_data:
+    driver: local
+
+networks:
+  rag_network:
+    driver: bridge
