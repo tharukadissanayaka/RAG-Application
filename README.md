@@ -90,14 +90,6 @@ docker-compose down
 5. Add environment variable: `GROQ_API_KEY=your_key`
 6. Deploy!
 
-### Koyeb (Free Tier)
-
-1. Connect GitHub repository
-2. Configure Docker build
-3. Set PORT to 8000
-4. Add `GROQ_API_KEY` environment variable
-5. Deploy!
-
 ### Environment Variables
 
 ```env
